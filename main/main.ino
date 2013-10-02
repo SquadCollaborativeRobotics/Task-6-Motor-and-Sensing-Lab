@@ -57,7 +57,7 @@ void setup() {
 
   //// Pins
   Serial.println("Initializing pins...");
-	pinMode(POT_PIN, INPUT);
+  pinMode(POT_PIN, INPUT);
 
   
   //// Sensors
