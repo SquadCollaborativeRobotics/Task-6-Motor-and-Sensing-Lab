@@ -12,10 +12,12 @@ class Ultrasonic
 public:
   Ultrasonic(int trigger_pin, int echo_pin);
   unsigned long getReading();
+  unsigned long getFilteredReading();
   void init();
 
 private:
   int _trigger_pin, _echo_pin;
+  unsigned long _last;
   unsigned long getRawDistance();
 };
 

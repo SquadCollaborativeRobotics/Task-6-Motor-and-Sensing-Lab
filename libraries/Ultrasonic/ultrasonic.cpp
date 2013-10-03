@@ -9,6 +9,7 @@
 // Choosing to iterate on this instead of calling micros() each time, 
 // which could reduce precision of distance reading
 #define ULTRASONIC_MAX_WAIT_COUNT 5000
+#define ULTRASONIC_FILTER_ALPHA 3/10
 
 // Initialize sensor
 Ultrasonic::Ultrasonic(int trigger_pin, int echo_pin) {
@@ -25,6 +26,12 @@ void Ultrasonic::init() {
 // Wrapper on getting sensor data.
 unsigned long Ultrasonic::getReading() {
   return getRawDistance();
+}
+
+unsigned long Ultrasonic::getFilteredReading() {
+  signed long diff = (signed long)getRawDistance() - (signed long)_last;
+  _last += (unsigned long)(diff * ULTRASONIC_FILTER_ALPHA);
+  return _last;
 }
 
 // Uses an ultrasonic sensor to get the measured distance in millimeters.
