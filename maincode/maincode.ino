@@ -59,6 +59,21 @@ Sameer Ansari
 Ultrasonic g_UsonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
 
 // LED light sensor setup
+// Set it up like http://playground.arduino.cc/Learning/LEDSensor
+//           + N PIN
+//           |
+//           <
+//           > 100 ohm resistor
+//           <
+//           |
+//           |
+//         -----
+//          / \  LED, maybe a 5mm, clear plastic is good
+//         -----
+//           |
+//           |
+//           + P PIN
+
 LEDLightSensor g_LEDLightSensor(LED_SENSOR_N_PIN, LED_SENSOR_P_PIN);
 
 // Servo controller
