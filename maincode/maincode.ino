@@ -1,6 +1,6 @@
 /*
-Task 2: Motor and Sensor Lab
-Team E
+Task 6: Motor and Sensor Lab
+Team E - Squad Collaborative Robotics
 
 Aaron Nye
 Shawn Hanna
@@ -11,6 +11,7 @@ Sameer Ansari
 
 #include <Servo.h>
 #include <ultrasonic.h>
+#include <LEDLightSensor.h>
 
 //////////////////////////////////////////////////////////////////////////////
 /// 
@@ -35,8 +36,12 @@ Sameer Ansari
 
 // system state max 0-STATE_MAX, used for button state incrementing
 #define STATE_MAX 3
-#define BUTTON_PRESS_BOUNCE_DELAY_MS 20
-#define BUTTON 2
+#define BUTTON_PRESS_BOUNCE_DELAY_MS 25
+#define BUTTON_PIN 2
+
+// LED Light Sensor
+#define LED_SENSOR_N_PIN 7
+#define LED_SENSOR_P_PIN 6
 
 //////////////////////////////////////////////////////////////////////////////
 /// 
@@ -52,6 +57,9 @@ Sameer Ansari
 
 // Ultrasonic sensor that returns readings in millimeters.
 Ultrasonic g_UsonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
+
+// LED light sensor setup
+LEDLightSensor g_LEDLightSensor(LED_SENSOR_N_PIN, LED_SENSOR_P_PIN);
 
 // Servo controller
 Servo g_Servo;
@@ -69,22 +77,22 @@ int g_motorState = 0;
 
 // software de-bounce last time for the button
 long last_time_high = 0; 
+boolean button_debounce_ignore = false;
+int last_state = LOW;
+int current_state = LOW;
 
 // De-bounced button press interrupt for state switching.
 void button_pressed() {
   if (abs(millis() - last_time_high) > BUTTON_PRESS_BOUNCE_DELAY_MS) {
-
     Serial.print("State change from ");
     Serial.print(g_motorState, DEC);
     g_motorState++;
     if (g_motorState > STATE_MAX) {g_motorState = 0;}
-    Serial.print(" to ");
+    Serial.print(" -> ");
     Serial.println(g_motorState, DEC);
-
     last_time_high = millis();
   }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // DEMOS
@@ -107,10 +115,24 @@ void demoUltrasonicAndServo() {
   delay(50);
 }
 
+// Run stepper motor based on LED sensor reading
+void demoLightAndStepper() {
+  // Get Light brightness level (0-100 bright to dark)
+  unsigned int led_val = g_LEDLightSensor.getFilteredReading();
+  Serial.print("Light: ");
+  Serial.println(led_val);
+  
+  // Set Motor position based on brightness level  
+  g_Servo.write(map(led_val,0,100,SERVO_MIN_POS,SERVO_MAX_POS));
+  
+  delay(100);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Serial events (only in state 0)
 
 void serialEvent() {
+  int pos;
   // Only run in state 0
   if (g_motorState != 0) {return;}
   
@@ -120,7 +142,7 @@ void serialEvent() {
     switch (c) {
       case 'a':
       // Servo position given 0-180
-      int pos = Serial.parseInt();
+      pos = Serial.parseInt();
       pos = constrain(pos, 0, 180); // Not limited to min/max here.
       Serial.print("Setting servo to position ");
       Serial.println(pos);
@@ -129,12 +151,12 @@ void serialEvent() {
       
       case 'b':
       // Aaron serial command motor
-      int pos = Serial.parseInt();
+      pos = Serial.parseInt();
       break;
       
       case 'c':
       // Shawn serial command motor
-      int pos = Serial.parseInt();
+      pos = Serial.parseInt();
       break;
     }
   }
@@ -148,18 +170,20 @@ void setup() {
   //// Pins
   Serial.println("Initializing pins...");
   pinMode(POT_PIN, INPUT);
-  pinMode(BUTTON, INPUT);
+  pinMode(BUTTON_PIN, INPUT);
   g_Servo.attach(SERVO_PIN);
   
-  // Attach interrupt for the button (on pin 2 = 0)
+  // Attach pin 2 (#0) interrupt for button press
   attachInterrupt(0, button_pressed, RISING);
-
   
   //// Sensors
   Serial.println("Initializing sensors...");
   
   // Initialize Ultrasonic sensor
   g_UsonicSensor.init();
+  
+  // Initialize LED Light Sensor
+  g_LEDLightSensor.init();
 
 
   Serial.println("Initialized.");
@@ -182,6 +206,7 @@ void loop() {
     
     case 2:
     // Aaron function call
+    demoLightAndStepper();
     break;
     
     case 3:
@@ -191,7 +216,6 @@ void loop() {
     default:
     break;
   }
-  // Flush serial
 }
 
 
