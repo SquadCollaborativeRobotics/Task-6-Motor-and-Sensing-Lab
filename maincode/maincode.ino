@@ -22,16 +22,21 @@ Sameer Ansari
 ///
 //////////////////////////////////////////////////////////////////////////////
 // Ultrasonic config
-#define ULTRASONIC_TRIG 2
+#define ULTRASONIC_TRIG 3
 #define ULTRASONIC_ECHO 4
 #define ULTRASONIC_MIN_DIST_MM 0
 #define ULTRASONIC_MAX_DIST_MM 300
 // Servo config
-#define SERVO_PIN 3
-#define SERVO_MIN_POS 45
-#define SERVO_MAX_POS 135
+#define SERVO_PIN 5
+#define SERVO_MIN_POS 10
+#define SERVO_MAX_POS 170
 
 #define POT_PIN 9
+
+// system state max 0-STATE_MAX, used for button state incrementing
+#define STATE_MAX 3
+#define BUTTON_PRESS_BOUNCE_DELAY_MS 20
+#define BUTTON 2
 
 //////////////////////////////////////////////////////////////////////////////
 /// 
@@ -62,6 +67,28 @@ Servo g_Servo;
 
 int g_motorState = 0;
 
+// software de-bounce last time for the button
+long last_time_high = 0; 
+
+// De-bounced button press interrupt for state switching.
+void button_pressed() {
+  if (abs(millis() - last_time_high) > BUTTON_PRESS_BOUNCE_DELAY_MS) {
+
+    Serial.print("State change from ");
+    Serial.print(g_motorState, DEC);
+    g_motorState++;
+    if (g_motorState > STATE_MAX) {g_motorState = 0;}
+    Serial.print(" to ");
+    Serial.println(g_motorState, DEC);
+
+    last_time_high = millis();
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// DEMOS
+
 // Run servo motor position based on ultrasonic sensor distance
 void demoUltrasonicAndServo() {
   // Ultrasonic sensor + motor
@@ -80,6 +107,40 @@ void demoUltrasonicAndServo() {
   delay(50);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Serial events (only in state 0)
+
+void serialEvent() {
+  // Only run in state 0
+  if (g_motorState != 0) {return;}
+  
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+
+    switch (c) {
+      case 'a':
+      // Servo position given 0-180
+      int pos = Serial.parseInt();
+      pos = constrain(pos, 0, 180); // Not limited to min/max here.
+      Serial.print("Setting servo to position ");
+      Serial.println(pos);
+      g_Servo.write(pos);
+      break;
+      
+      case 'b':
+      // Aaron serial command motor
+      int pos = Serial.parseInt();
+      break;
+      
+      case 'c':
+      // Shawn serial command motor
+      int pos = Serial.parseInt();
+      break;
+    }
+  }
+}
+
+
 void setup() {
   // Initialize serial communication.
   Serial.begin(9600);
@@ -87,7 +148,11 @@ void setup() {
   //// Pins
   Serial.println("Initializing pins...");
   pinMode(POT_PIN, INPUT);
+  pinMode(BUTTON, INPUT);
   g_Servo.attach(SERVO_PIN);
+  
+  // Attach interrupt for the button (on pin 2 = 0)
+  attachInterrupt(0, button_pressed, RISING);
 
   
   //// Sensors
@@ -100,7 +165,8 @@ void setup() {
   Serial.println("Initialized.");
 
   // TEMPORARY : TESTING SERVO/USONIC
-  g_motorState = 1;
+  g_motorState = 0;
+  
 }
 
 void loop() {
@@ -112,6 +178,14 @@ void loop() {
     case 1:
     // Servo motor and ultrasonic sensor demo
     demoUltrasonicAndServo();
+    break;
+    
+    case 2:
+    // Aaron function call
+    break;
+    
+    case 3:
+    // Shawn function call
     break;
     
     default:
