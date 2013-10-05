@@ -45,9 +45,17 @@ Sameer Ansari
 int g_motorState = 0;
 
 
-void setup() {
+void setup()
+{
 	pinMode(POT_PIN, INPUT);
 }
 
-void loop() {
+void loop()
+{
+	double value = readPotentiometer();
+}
+
+double readPotentiometer()
+{
+	return analogRead(POT_PIN) / (double) 1023.0;
 }
