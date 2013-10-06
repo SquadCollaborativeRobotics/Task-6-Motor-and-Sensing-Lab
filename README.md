@@ -1,7 +1,9 @@
-MultiVehicleExplorationNavigation
+Task 6 Motor/Sensor Lab
 =================================
 
-Main Robotics Project - Multi-Vehicle Exploration &amp; Navigation
+Team E - Squad Collaborative Robotics
+
+![GUI](http://i.imgur.com/DkblNDl.png)
 
 
 Installation
@@ -22,5 +24,3 @@ States
 GUI
 ---
 The GUI was built using [Processing](http://www.processing.org/) and [ControlP5](http://www.sojamo.de/libraries/controlP5/).
-
-![GUI](http://i.imgur.com/DkblNDl.png)
