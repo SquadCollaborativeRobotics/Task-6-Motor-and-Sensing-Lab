@@ -29,8 +29,8 @@ unsigned int LEDLightSensor::getReading() {
   val = map(val,
             LEDLightSensor_MIN_THRESHOLD,
             LEDLightSensor_MAX_THRESHOLD,
-            0,
-            100);
+            100,
+            0);
   return val;
 }
 
