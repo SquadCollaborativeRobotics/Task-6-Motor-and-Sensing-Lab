@@ -117,10 +117,6 @@ void demoUltrasonicAndServo() {
   // Ultrasonic sensor + motor
   unsigned long usonic_dist_mm = g_UsonicSensor.getFilteredReading();
 
-  usonic_dist_mm = constrain(usonic_dist_mm,
-                             ULTRASONIC_MIN_DIST_MM,
-                             ULTRASONIC_MAX_DIST_MM);
-
   g_Servo.write(map(usonic_dist_mm, 
                     ULTRASONIC_MIN_DIST_MM,
                     ULTRASONIC_MAX_DIST_MM,
@@ -177,6 +173,14 @@ void serialEvent() {
   }
 }
 
+void printSensorInfo() {
+  int ultrasonic = (int)g_UsonicSensor.getFilteredReading();
+  int brightness = (int)g_LEDLightSensor.getFilteredReading();
+  Serial.print('|');
+  Serial.print(ultrasonic, DEC);
+  Serial.print(' ');
+  Serial.println(brightness);
+}
 
 void setup() {
   // Initialize serial communication.
@@ -194,8 +198,8 @@ void setup() {
   //// Sensors
   Serial.println("Initializing sensors...");
   
-  // Initialize Ultrasonic sensor
-  g_UsonicSensor.init();
+  // Initialize Ultrasonic sensor with min/max distance
+  g_UsonicSensor.init(ULTRASONIC_MIN_DIST_MM, ULTRASONIC_MAX_DIST_MM);
   
   // Initialize LED Light Sensor
   g_LEDLightSensor.init();
@@ -231,6 +235,8 @@ void loop() {
     default:
     break;
   }
+  printSensorInfo();
+  delay(100);
 }
 
 
