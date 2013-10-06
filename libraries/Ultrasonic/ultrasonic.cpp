@@ -15,21 +15,31 @@
 Ultrasonic::Ultrasonic(int trigger_pin, int echo_pin) {
   _trigger_pin = trigger_pin;
   _echo_pin = echo_pin;
+  _MIN_DIST_MM = 0;
+  _MAX_DIST_MM = 0;
 }
 
-void Ultrasonic::init() {
+void Ultrasonic::init(unsigned long min, unsigned long max) {
   // Set up pins
   pinMode(_trigger_pin, OUTPUT);
   pinMode(_echo_pin, INPUT);
+  setMinMaxDistances(min, max);
+}
+
+void Ultrasonic::setMinMaxDistances(unsigned long min, unsigned long max) {
+  _MIN_DIST_MM = min;
+  _MAX_DIST_MM = max;
 }
 
 // Wrapper on getting sensor data.
 unsigned long Ultrasonic::getReading() {
-  return getRawDistance();
+  return constrain(getRawDistance(),
+                   _MIN_DIST_MM,
+                   _MAX_DIST_MM);
 }
 
 unsigned long Ultrasonic::getFilteredReading() {
-  signed long diff = (signed long)getRawDistance() - (signed long)_last;
+  signed long diff = (signed long)getReading() - (signed long)_last;
   _last += (unsigned long)(diff * ULTRASONIC_FILTER_ALPHA);
   return _last;
 }
@@ -69,5 +79,6 @@ unsigned long Ultrasonic::getRawDistance() {
   
   // Return distance in mm, sensor is supposedly accurate to 0.3cm = 3mm
   // Clamp to 4000mm, which is 4m or maximum effective range of this sensor.
-  return min(4000, uptime * 17 / 100);
+  unsigned long dist_mm = min(4000, uptime * 17 / 100);
+  return dist_mm;
 }
