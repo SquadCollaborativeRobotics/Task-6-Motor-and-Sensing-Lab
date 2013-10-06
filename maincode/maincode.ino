@@ -31,7 +31,12 @@ Sameer Ansari
 #define SERVO_MIN_POS 10
 #define SERVO_MAX_POS 170
 
+/// Shawn's stuff
 #define POT_PIN 9
+#define MOTOR_DIR_PIN1 8
+#define MOTOR_DIR_PIN2 7
+#define MOTOR_SPEED_PIN 6
+
 
 // system state max 0-STATE_MAX, used for button state incrementing
 #define STATE_MAX 3
@@ -148,7 +153,9 @@ void setup() {
   //// Pins
   Serial.println("Initializing pins...");
   pinMode(POT_PIN, INPUT);
-  pinMode(BUTTON, INPUT);
+  pinMode(MOTOR_SPEED_PIN, OUTPUT);
+  pinMode(MOTOR_DIR_PIN1, OUTPUT);
+  pinMode(MOTOR_DIR_PIN2, OUTPUT);
   g_Servo.attach(SERVO_PIN);
   
   // Attach interrupt for the button (on pin 2 = 0)
@@ -185,7 +192,8 @@ void loop() {
     break;
     
     case 3:
-    // Shawn function call
+    double newVal = readPotentiometer();
+    setSpeed(newVal);
     break;
     
     default:
@@ -194,4 +202,29 @@ void loop() {
   // Flush serial
 }
 
+double readPotentiometer()
+{
+  return analogRead(POT_PIN) / (double) 1023.0;
+}
 
+void setSpeed(double newVal)
+{
+  int direction = 0;
+  if (newVal - 1023.0/2.0 < 0)
+  {
+    direction = 1;
+  }
+  int speed = Math.abs(newVal - 1023.0/2.0);
+  analogWrite(MOTOR_SPEED_PIN, speed);
+  if (direction == 0)
+  {
+    digitalWrite(MOTOR_DIR_PIN1, 1);
+    digitalWrite(MOTOR_DIR_PIN2, 0);
+  }
+  else
+  {
+    digitalWrite(MOTOR_DIR_PIN1, 0);
+    digitalWrite(MOTOR_DIR_PIN2, 1);
+  }
+
+}
