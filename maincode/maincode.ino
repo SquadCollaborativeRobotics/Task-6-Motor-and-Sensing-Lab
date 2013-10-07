@@ -33,7 +33,7 @@ Sameer Ansari
 #define SERVO_MIN_POS 10
 #define SERVO_MAX_POS 170
 
-#define POT_PIN 9
+#define POT_PIN A0
 
 // system state max 0-STATE_MAX, used for button state incrementing
 #define STATE_MAX 3
@@ -123,6 +123,7 @@ int current_state = LOW;
 // De-bounced button press interrupt for state switching.
 void button_pressed() {
   if (abs(millis() - last_time_high) > BUTTON_PRESS_BOUNCE_DELAY_MS) {
+    stopDC();
     Serial.print("State change from ");
     Serial.print(g_motorState, DEC);
     g_motorState++;
@@ -138,26 +139,26 @@ double readPotentiometer()
   return analogRead(POT_PIN) / (double) 1023.0;
 }
 
-void setSpeed(double newVal)
+void setDCVelocity(unsigned int spd, int dir)
 {
-  int direction = 0;
-  if (newVal - 1023.0/2.0 < 0)
-  {
-    direction = 1;
-  }
-  int speed = Math.abs(newVal - 1023.0/2.0);
-  analogWrite(MOTOR_SPEED_PIN, speed);
-  if (direction == 0)
-  {
-    digitalWrite(MOTOR_DIR_PIN1, 1);
-    digitalWrite(MOTOR_DIR_PIN2, 0);
-  }
-  else
-  {
-    digitalWrite(MOTOR_DIR_PIN1, 0);
-    digitalWrite(MOTOR_DIR_PIN2, 1);
-  }
+  // Speed must positive, and in range 0 - 1000
+  // Direction sets direction.
+  spd = map(spd, 0, 1000, 0, 255);
 
+  // dir = direction, 1 = forward, -1 = backward
+  analogWrite(DC_ENABLE_PIN, spd);
+  if (dir == 1 || dir == -1) {
+    digitalWrite(DC_DRIVE1_PIN, dir > 0 ? HIGH : LOW);
+    digitalWrite(DC_DRIVE2_PIN, dir > 0 ? LOW : HIGH);
+  } 
+  else {
+    Serial.println("Weird direction given");
+  }
+}
+
+void stopDC() {
+  digitalWrite(DC_DRIVE1_PIN, HIGH);
+  digitalWrite(DC_DRIVE2_PIN, LOW);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,11 +191,16 @@ void demoLightAndStepper() {
   delay(100);
 }
 
+void demoPotAndDC() {
+  setDCVelocity(500.0, 1);
+  delay(10);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Serial events (only in state 0)
 
 void serialEvent() {
-  int pos;
+  int pos, vel;
   // Only run in state 0
   if (g_motorState != 0) {return;}
   
@@ -218,7 +224,12 @@ void serialEvent() {
       
       case 'c':
       // Shawn serial command motor
-      pos = Serial.parseInt();
+      vel = Serial.parseInt();
+      if (vel < 0) {
+        setDCVelocity(abs(vel), -1);
+      } else {
+        setDCVelocity(vel, 1);
+      }
       break;
     }
   }
@@ -287,6 +298,7 @@ void loop() {
     
     case 3:
     // Shawn function call
+    demoPotAndDC();
     break;
     
     default:

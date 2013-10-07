@@ -12,6 +12,7 @@ int ultrasonic=0;
 int brightness=0;
 int encoder=0;
 int prevPos=0;
+int prevVel=0;
 
 void setup() {
   size(500,350);
@@ -46,11 +47,13 @@ void setup() {
   cp5.addSlider("encoder")
      .setPosition(100,140)
      .setRange(-100000,100000)
+     .setValue(0)
      .setCaptionLabel("Encoder")
      ;
   cp5.addSlider("encoder_velocity")
      .setPosition(100,160)
      .setRange(-10,10)
+     .setValue(0)
      .setCaptionLabel("Encoder Velocity (RPS)")
      ;
      
@@ -58,19 +61,22 @@ void setup() {
   cp5.addSlider("servo")
      .setPosition(100,200)
      .setRange(0,180)
-     .setNumberOfTickMarks(10)
+     .setNumberOfTickMarks(11)
+     .setValue(90)
      .setCaptionLabel("Servo motor position");
      ;
   cp5.addSlider("stepper")
      .setPosition(100,230)
      .setRange(-10,10)
-     .setNumberOfTickMarks(10)
+     .setNumberOfTickMarks(11)
+     .setValue(0)
      .setCaptionLabel("Stepper motor velocity");
      ;
   cp5.addSlider("dc")
      .setPosition(100,260)
-     .setRange(-50,50)
-     .setNumberOfTickMarks(10)
+     .setRange(-1000,1000)
+     .setNumberOfTickMarks(11)
+     .setValue(0)
      .setCaptionLabel("DC motor velocity");
      ;
   
@@ -119,5 +125,15 @@ void servo(int pos) {
     port.write(str(pos));
     port.write('\n');
     prevPos = pos;
+  }
+}
+
+void dc(int vel) {
+  if (vel != prevVel) {
+    println("Setting DC to "+vel);
+    port.write("c");
+    port.write(str(vel));
+    port.write('\n');
+    prevVel = vel;
   }
 }
