@@ -11,6 +11,7 @@ final int black = color(0,0,0);
 int ultrasonic=0;
 int brightness=0;
 int encoder=0;
+int pot=0;
 int prevPos=0;
 int prevVel=0;
 
@@ -96,13 +97,14 @@ void serialEvent(Serial port) {
   String s = port.readStringUntil('\n');
   if (s != null && s.charAt(0) == '|') {
     s = trim(s.substring(1));
-    // |ultrasonic brightness encoder encoderVelocity
+    // |ultrasonic brightness encoder encoderVelocity potentiometer
     String[] sensor_readings = splitTokens(s, " ");
-    if (sensor_readings.length == 4) {
+    if (sensor_readings.length == 5) {
       cp5.controller("ultrasonic").setValue(int(sensor_readings[0]));
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
       cp5.controller("encoder").setValue(Long.parseLong(sensor_readings[2]));
       cp5.controller("encoder_velocity").setValue(float(sensor_readings[3]));
+      cp5.controller("pot").setValue(float(sensor_readings[3]));
     } else {
       println("You done goofed.");
     }

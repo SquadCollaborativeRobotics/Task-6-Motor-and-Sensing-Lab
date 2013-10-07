@@ -134,9 +134,10 @@ void button_pressed() {
   }
 }
 
+// Returns pot value from as double from 0 to 1.0
 double readPotentiometer()
 {
-  return analogRead(POT_PIN) / (double) 1023.0;
+  return (double)analogRead(POT_PIN) / 1023.0;
 }
 
 void setDCVelocity(unsigned int spd, int dir)
@@ -156,6 +157,7 @@ void setDCVelocity(unsigned int spd, int dir)
   }
 }
 
+// Stops DC motor
 void stopDC() {
   digitalWrite(DC_DRIVE1_PIN, HIGH);
   digitalWrite(DC_DRIVE2_PIN, LOW);
@@ -192,6 +194,7 @@ void demoLightAndStepper() {
 }
 
 void demoPotAndDC() {
+  double potVal = readPotentiometer();
   setDCVelocity(500.0, 1);
   delay(10);
 }
@@ -245,7 +248,9 @@ void printSensorInfo() {
   Serial.print(' ');
   Serial.print(g_DCMotorEncoder.read());
   Serial.print(' ');
-  Serial.println(g_EncoderVelocity / (float)TICKS_PER_REVOLUTION);
+  Serial.print(g_EncoderVelocity / (float)TICKS_PER_REVOLUTION);
+  Serial.print(' ');
+  Serial.println(readPotentiometer());
 }
 
 void setup() {
