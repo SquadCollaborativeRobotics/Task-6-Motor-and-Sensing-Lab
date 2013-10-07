@@ -13,7 +13,7 @@ Sameer Ansari
 #include <ultrasonic.h>
 #include <LEDLightSensor.h>
 #include <Encoder.h>
-
+#include <Timer.h>
 //////////////////////////////////////////////////////////////////////////////
 /// 
 /// DEFINES
@@ -47,7 +47,13 @@ Sameer Ansari
 // Encoder stuff
 #define ENCODER_A_PIN 3
 #define ENCODER_B_PIN 12
+#define ENCODER_TIME_DELAY_MS 100
+#define TICKS_PER_REVOLUTION 750
 
+// DC Motor
+#define DC_ENABLE_PIN 11
+#define DC_DRIVE2_PIN 10
+#define DC_DRIVE1_PIN 13
 //////////////////////////////////////////////////////////////////////////////
 /// 
 /// Global Variables
@@ -65,6 +71,15 @@ Ultrasonic g_UsonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
 
 // Encoder
 Encoder g_DCMotorEncoder(ENCODER_A_PIN, ENCODER_B_PIN);
+Timer g_TimerEncoder;
+float g_EncoderVelocity = 0;
+long g_LastEncoderValue = 0;
+
+void updateEncoderReading() {
+  long encoderValue = g_DCMotorEncoder.read();
+  g_EncoderVelocity = 1000.0*(float)(encoderValue-g_LastEncoderValue)/(float)ENCODER_TIME_DELAY_MS;
+  g_LastEncoderValue = encoderValue;
+}
 
 // LED light sensor setup
 // Set it up like http://playground.arduino.cc/Learning/LEDSensor
@@ -189,7 +204,9 @@ void printSensorInfo() {
   Serial.print(' ');
   Serial.print(brightness);
   Serial.print(' ');
-  Serial.println(g_DCMotorEncoder.read());
+  Serial.print(g_DCMotorEncoder.read());
+  Serial.print(' ');
+  Serial.println(g_EncoderVelocity / (float)TICKS_PER_REVOLUTION);
 }
 
 void setup() {
@@ -214,7 +231,9 @@ void setup() {
   // Initialize LED Light Sensor
   g_LEDLightSensor.init();
 
-
+  // Initialize encoder counter
+  g_TimerEncoder.every(ENCODER_TIME_DELAY_MS, updateEncoderReading);
+  
   Serial.println("Initialized.");
 
   // TEMPORARY : TESTING SERVO/USONIC
@@ -245,6 +264,7 @@ void loop() {
     default:
     break;
   }
+  g_TimerEncoder.update();
   printSensorInfo();
   delay(100);
 }

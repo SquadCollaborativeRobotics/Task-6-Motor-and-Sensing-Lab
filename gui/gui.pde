@@ -45,8 +45,13 @@ void setup() {
   
   cp5.addSlider("encoder")
      .setPosition(100,140)
-     .setRange(0,100)
+     .setRange(-100000,100000)
      .setCaptionLabel("Encoder")
+     ;
+  cp5.addSlider("encoder_velocity")
+     .setPosition(100,160)
+     .setRange(-10,10)
+     .setCaptionLabel("Encoder Velocity (RPS)")
      ;
      
   // Motor sliders
@@ -85,12 +90,13 @@ void serialEvent(Serial port) {
   String s = port.readStringUntil('\n');
   if (s != null && s.charAt(0) == '|') {
     s = trim(s.substring(1));
-    // |ultrasonic brightness encoder
+    // |ultrasonic brightness encoder encoderVelocity
     String[] sensor_readings = splitTokens(s, " ");
-    if (sensor_readings.length == 3) {
+    if (sensor_readings.length == 4) {
       cp5.controller("ultrasonic").setValue(int(sensor_readings[0]));
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
-      cp5.controller("encoder").setValue(int(sensor_readings[2]));
+      cp5.controller("encoder").setValue(Long.parseLong(sensor_readings[2]));
+      cp5.controller("encoder_velocity").setValue(float(sensor_readings[3]));
     } else {
       println("You done goofed.");
     }
