@@ -133,6 +133,33 @@ void button_pressed() {
   }
 }
 
+double readPotentiometer()
+{
+  return analogRead(POT_PIN) / (double) 1023.0;
+}
+
+void setSpeed(double newVal)
+{
+  int direction = 0;
+  if (newVal - 1023.0/2.0 < 0)
+  {
+    direction = 1;
+  }
+  int speed = Math.abs(newVal - 1023.0/2.0);
+  analogWrite(MOTOR_SPEED_PIN, speed);
+  if (direction == 0)
+  {
+    digitalWrite(MOTOR_DIR_PIN1, 1);
+    digitalWrite(MOTOR_DIR_PIN2, 0);
+  }
+  else
+  {
+    digitalWrite(MOTOR_DIR_PIN1, 0);
+    digitalWrite(MOTOR_DIR_PIN2, 1);
+  }
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // DEMOS
 
@@ -269,5 +296,3 @@ void loop() {
   printSensorInfo();
   delay(100);
 }
-
-
