@@ -12,6 +12,7 @@ Sameer Ansari
 #include <Servo.h>
 #include <ultrasonic.h>
 #include <LEDLightSensor.h>
+#include <Encoder.h>
 
 //////////////////////////////////////////////////////////////////////////////
 /// 
@@ -23,7 +24,7 @@ Sameer Ansari
 ///
 //////////////////////////////////////////////////////////////////////////////
 // Ultrasonic config
-#define ULTRASONIC_TRIG 3
+#define ULTRASONIC_TRIG 8
 #define ULTRASONIC_ECHO 4
 #define ULTRASONIC_MIN_DIST_MM 0
 #define ULTRASONIC_MAX_DIST_MM 300
@@ -43,6 +44,10 @@ Sameer Ansari
 #define LED_SENSOR_N_PIN 7
 #define LED_SENSOR_P_PIN 6
 
+// Encoder stuff
+#define ENCODER_A_PIN 3
+#define ENCODER_B_PIN 12
+
 //////////////////////////////////////////////////////////////////////////////
 /// 
 /// Global Variables
@@ -57,6 +62,9 @@ Sameer Ansari
 
 // Ultrasonic sensor that returns readings in millimeters.
 Ultrasonic g_UsonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
+
+// Encoder
+Encoder g_DCMotorEncoder(ENCODER_A_PIN, ENCODER_B_PIN);
 
 // LED light sensor setup
 // Set it up like http://playground.arduino.cc/Learning/LEDSensor
@@ -179,7 +187,9 @@ void printSensorInfo() {
   Serial.print('|');
   Serial.print(ultrasonic, DEC);
   Serial.print(' ');
-  Serial.println(brightness);
+  Serial.print(brightness);
+  Serial.print(' ');
+  Serial.println(g_DCMotorEncoder.read());
 }
 
 void setup() {

@@ -10,6 +10,7 @@ ControlP5 cp5;
 final int black = color(0,0,0);
 int ultrasonic=0;
 int brightness=0;
+int encoder=0;
 int prevPos=0;
 
 void setup() {
@@ -33,13 +34,19 @@ void setup() {
   cp5.addSlider("brightness")
      .setPosition(100,80)
      .setRange(0,100)
-     .setCaptionLabel("Brightness");
+     .setCaptionLabel("Brightness")
      ;
      
   cp5.addSlider("pot")
      .setPosition(100,110)
      .setRange(0,100)
-     .setCaptionLabel("Potentiometer");
+     .setCaptionLabel("Potentiometer")
+     ;
+  
+  cp5.addSlider("encoder")
+     .setPosition(100,140)
+     .setRange(0,100)
+     .setCaptionLabel("Encoder")
      ;
      
   // Motor sliders
@@ -78,11 +85,14 @@ void serialEvent(Serial port) {
   String s = port.readStringUntil('\n');
   if (s != null && s.charAt(0) == '|') {
     s = trim(s.substring(1));
-    // |ultrasonic brightness
+    // |ultrasonic brightness encoder
     String[] sensor_readings = splitTokens(s, " ");
-    if (sensor_readings.length == 2) {
+    if (sensor_readings.length == 3) {
       cp5.controller("ultrasonic").setValue(int(sensor_readings[0]));
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
+      cp5.controller("encoder").setValue(int(sensor_readings[2]));
+    } else {
+      println("You done goofed.");
     }
   }
 }
