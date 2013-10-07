@@ -11,7 +11,7 @@ final int black = color(0,0,0);
 int ultrasonic=0;
 int brightness=0;
 int encoder=0;
-int pot=0;
+float pot=0;
 int prevPos=0;
 int prevVel=0;
 
@@ -41,7 +41,7 @@ void setup() {
      
   cp5.addSlider("pot")
      .setPosition(100,110)
-     .setRange(0,100)
+     .setRange(0,1)
      .setCaptionLabel("Potentiometer")
      ;
   
@@ -104,7 +104,7 @@ void serialEvent(Serial port) {
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
       cp5.controller("encoder").setValue(Long.parseLong(sensor_readings[2]));
       cp5.controller("encoder_velocity").setValue(float(sensor_readings[3]));
-      cp5.controller("pot").setValue(float(sensor_readings[3]));
+      cp5.controller("pot").setValue(float(sensor_readings[4]));
     } else {
       println("You done goofed.");
     }

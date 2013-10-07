@@ -14,6 +14,8 @@ Sameer Ansari
 #include <LEDLightSensor.h>
 #include <Encoder.h>
 #include <Timer.h>
+#include <PID_v1.h>
+
 //////////////////////////////////////////////////////////////////////////////
 /// 
 /// DEFINES
@@ -73,14 +75,29 @@ Ultrasonic g_UsonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
 // Encoder
 Encoder g_DCMotorEncoder(ENCODER_A_PIN, ENCODER_B_PIN);
 Timer g_TimerEncoder;
-float g_EncoderVelocity = 0;
+float g_EncoderVelocity = 0; // Radians per second
 long g_LastEncoderValue = 0;
+double g_EncoderAngle = 0; // In Radians
 
 void updateEncoderReading() {
+  // Get raw ticks
   long encoderValue = g_DCMotorEncoder.read();
+
+  // Get position in radians (includes multiple revolutions)
+  g_EncoderAngle = (double)encoderValue / TICKS_PER_REVOLUTION;
+  
+  // Get velocity in ticks/sec
   g_EncoderVelocity = 1000.0*(float)(encoderValue-g_LastEncoderValue)/(float)ENCODER_TIME_DELAY_MS;
+
+  // Convert to radians/sec
+  g_EncoderVelocity /=  (double)TICKS_PER_REVOLUTION;
+  
+  // Set last known encoder ticks
   g_LastEncoderValue = encoderValue;
 }
+
+// DC Motor
+//PID(g)
 
 // LED light sensor setup
 // Set it up like http://playground.arduino.cc/Learning/LEDSensor
@@ -159,8 +176,26 @@ void setDCVelocity(unsigned int spd, int dir)
 
 // Stops DC motor
 void stopDC() {
-  digitalWrite(DC_DRIVE1_PIN, HIGH);
+  analogWrite(DC_ENABLE_PIN, 0);
+  digitalWrite(DC_DRIVE1_PIN, LOW);
   digitalWrite(DC_DRIVE2_PIN, LOW);
+}
+
+// Simple non-PID move to deg value
+void setDCtoTick(int deg) {
+  int tick = map(deg, 0, 360, 0, TICKS_PER_REVOLUTION);
+  int diff = tick - g_DCMotorEncoder.read();
+  while (diff > 0) {
+    setDCVelocity(300, -1);
+    delay(10);
+    diff = tick - g_DCMotorEncoder.read();
+  }
+  while (diff < 0) {
+    setDCVelocity(300, 1);
+    delay(10);
+    diff = tick - g_DCMotorEncoder.read();
+  }
+  stopDC();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,8 +230,12 @@ void demoLightAndStepper() {
 
 void demoPotAndDC() {
   double potVal = readPotentiometer();
-  setDCVelocity(500.0, 1);
-  delay(10);
+  // Set potVal to -1000,1000
+  potVal = potVal*2000 - 1000;
+  // Get direction from sign of potval
+  int dir = potVal > 0 ? 1 : -1;
+  setDCVelocity(abs(potVal), dir);
+  delay(20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,18 +260,24 @@ void serialEvent() {
       break;
       
       case 'b':
-      // Aaron serial command motor
+      // Aaron serial command Stepper motor
       pos = Serial.parseInt();
       break;
       
       case 'c':
-      // Shawn serial command motor
+      // Shawn serial command DC motor
       vel = Serial.parseInt();
       if (vel < 0) {
         setDCVelocity(abs(vel), -1);
       } else {
         setDCVelocity(vel, 1);
       }
+      break;
+      
+      case 'd':
+      // Shawn serial command DC motor
+      pos = Serial.parseInt();
+      setDCtoTick(pos);
       break;
     }
   }
@@ -248,7 +293,7 @@ void printSensorInfo() {
   Serial.print(' ');
   Serial.print(g_DCMotorEncoder.read());
   Serial.print(' ');
-  Serial.print(g_EncoderVelocity / (float)TICKS_PER_REVOLUTION);
+  Serial.print(g_EncoderVelocity);
   Serial.print(' ');
   Serial.println(readPotentiometer());
 }
