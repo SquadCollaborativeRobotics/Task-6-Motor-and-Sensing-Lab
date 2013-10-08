@@ -13,6 +13,10 @@ Move folders in libraries into arduino libraries folder.
 * Windows: ``` Documents\Arduino\libraries\<PLACE_LIBRARIES_HERE>```
 
 
+Setup
+---
+DC Motor should take 20V for the gains and minimum velocity values set to work.
+
 States
 ---
 
