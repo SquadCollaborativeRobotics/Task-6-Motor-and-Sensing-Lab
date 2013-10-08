@@ -79,7 +79,7 @@ Sameer Ansari
 // Ultrasonic sensor that returns readings in millimeters.
 Ultrasonic g_UsonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
 
-// Encoder
+// Encoder Initialization
 Encoder g_DCMotorEncoder(ENCODER_A_PIN, ENCODER_B_PIN);
 Timer g_TimerEncoder;
 float g_EncoderVelocity = 0; // Radians per second
@@ -204,9 +204,11 @@ void setDCMotor(unsigned int spd, int dir)
   // Direction sets direction.
   spd = map(spd, 0, 1000, 0, 255);
 
-  // dir = direction, 1 = forward, -1 = backward
+  // Write output voltage to Enable Pin on H-Bridge
   analogWrite(DC_ENABLE_PIN, spd);
   if (dir == 1 || dir == -1) {
+    // Set H-Bridge Pins to appropriate values for direction
+    // 1 = forward, -1 = backward
     digitalWrite(DC_DRIVE1_PIN, dir > 0 ? LOW : HIGH);
     digitalWrite(DC_DRIVE2_PIN, dir > 0 ? HIGH : LOW);
   } 
@@ -217,7 +219,9 @@ void setDCMotor(unsigned int spd, int dir)
 
 // Stops DC motor
 void stopDC() {
+  // Disable the H-Bridge
   analogWrite(DC_ENABLE_PIN, LOW);
+  // Change pins to be in brake mode
   digitalWrite(DC_DRIVE1_PIN, HIGH);
   digitalWrite(DC_DRIVE2_PIN, HIGH);
 }
@@ -246,9 +250,10 @@ void setDCtoDeg(int deg) {
     // Update PID to set output velocity
     g_DCMotorPID.Compute();
     
-    // Set velocity
+    // Don't allow control to go below minimum response signal (Torque which overcomes friction)
     if (g_DCMotorVelocity >= 0 && g_DCMotorVelocity < MIN_DC_SPD) { g_DCMotorVelocity = MIN_DC_SPD; }
     else if (g_DCMotorVelocity < 0 && g_DCMotorVelocity > -MIN_DC_SPD) { g_DCMotorVelocity = -MIN_DC_SPD; }
+    // Set velocity
     setDCVelocity(g_DCMotorVelocity);
     
     Serial.print(", Vel set to: ");
@@ -264,9 +269,10 @@ void setDCtoDeg(int deg) {
 
 // Run servo motor position based on ultrasonic sensor distance
 void demoUltrasonicAndServo() {
-  // Ultrasonic sensor + motor
+  // Get Ultrasonic measurement
   unsigned long usonic_dist_mm = g_UsonicSensor.getFilteredReading();
 
+  // Map Servo Range to Ultrasonic Range, use reading as write value
   g_Servo.write(map(usonic_dist_mm, 
                     ULTRASONIC_MIN_DIST_MM,
                     ULTRASONIC_MAX_DIST_MM,
@@ -309,12 +315,25 @@ void demoPotAndDC() {
 ////////////////////////////////////////////////////////////////////////////////
 // Serial events (only in state 0)
 
+-/*
+  
+  We assume Serial Commands will be given as [char][number], where char
+  corresponds to a state of command, and number is a command for that state
+STATE MAP:
+a -> Servo Position, num = [0, 180] (degrees for servo position)
+b -> Stepper Motor Step, num = int (degrees for Stepper to step)
+c -> DC motor Velocity, num = [-1000, 1000] (Qualitative Speed)
+d -> DC motor Position, num = int (absolute degrees for motor to go to)
+
+-*/
+
 void serialEvent() {
   int pos, vel;
   // Only run in state 0
   if (g_motorState != 0) {return;}
   
   while (Serial.available()) {
+    // Get state character from buffer
     char c = (char)Serial.read();
 
     switch (c) {
@@ -405,7 +424,7 @@ void setup() {
   
   Serial.println("Initialized.");
 
-  // TEMPORARY : TESTING SERVO/USONIC
+  // Initialize Demo in GUI Mode
   g_motorState = 0;
   
 }
