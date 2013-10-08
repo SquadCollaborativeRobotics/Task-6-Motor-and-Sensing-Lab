@@ -51,6 +51,12 @@ void setup() {
      .setValue(0)
      .setCaptionLabel("Encoder")
      ;
+  cp5.addSlider("encoder_angle")
+     .setPosition(100,150)
+     .setRange(0,360)
+     .setValue(0)
+     .setCaptionLabel("Encoder Angle (degrees)")
+     ;
   cp5.addSlider("encoder_velocity")
      .setPosition(100,160)
      .setRange(-10,10)
@@ -97,14 +103,15 @@ void serialEvent(Serial port) {
   String s = port.readStringUntil('\n');
   if (s != null && s.charAt(0) == '|') {
     s = trim(s.substring(1));
-    // |ultrasonic brightness encoder encoderVelocity potentiometer
+    // |ultrasonic brightness encoderTicks encoderAngle encoderVelocity potentiometer
     String[] sensor_readings = splitTokens(s, " ");
-    if (sensor_readings.length == 5) {
+    if (sensor_readings.length == 6) {
       cp5.controller("ultrasonic").setValue(int(sensor_readings[0]));
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
       cp5.controller("encoder").setValue(Long.parseLong(sensor_readings[2]));
-      cp5.controller("encoder_velocity").setValue(float(sensor_readings[3]));
-      cp5.controller("pot").setValue(float(sensor_readings[4]));
+      cp5.controller("encoder_angle").setValue(float(sensor_readings[3]));
+      cp5.controller("encoder_velocity").setValue(float(sensor_readings[4]));
+      cp5.controller("pot").setValue(float(sensor_readings[5]));
     } else {
       println("You done goofed.");
     }
