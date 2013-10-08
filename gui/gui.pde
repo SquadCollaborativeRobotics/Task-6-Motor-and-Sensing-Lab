@@ -13,12 +13,9 @@ int brightness=0;
 int encoder=0;
 float pot=0;
 int deg;
-int stepdeg=0;
 int prevPos=0;
 int prevVel=0;
 int prevDeg=0;
-int prevStepdeg=0;
-int currState = 0;
 
 void setup() {
   size(500,350);
@@ -31,15 +28,6 @@ void setup() {
   
   // add a horizontal sliders, the value of this slider will be linked
   // to variable 'sliderValue'
-  
-  // Current State
-  cp5.addNumberbox("currState")
-     .setPosition(10,10)
-     .setSize(30,15)
-     .setRange(0,4)
-     .setValue(0)
-     .setCaptionLabel("STATE")
-     ;
   
   // Sensor sliders 
   cp5.addSlider("ultrasonic")
@@ -87,10 +75,10 @@ void setup() {
      .setCaptionLabel("Servo motor position");
   cp5.addSlider("stepper")
      .setPosition(100,230)
-     .setRange(-360,360)
+     .setRange(-10,10)
      .setNumberOfTickMarks(11)
      .setValue(0)
-     .setCaptionLabel("Stepper motor offset (degrees)");
+     .setCaptionLabel("Stepper motor velocity");
      
   cp5.addSlider("dc")
      .setPosition(100,260)
@@ -135,12 +123,6 @@ void serialEvent(Serial port) {
       println("You done goofed.");
     }
   }
-  else if (s!= null && s.charAt(0) == '!') {
-    currState = int(trim(s.substring(1)));
-    print("Current State: ");
-    println(currState);
-    cp5.controller("state").setValue(currState);
-  }
 }
 
 
@@ -169,16 +151,6 @@ void dc(int vel) {
     port.write(str(vel));
     port.write('\n');
     prevVel = vel;
-  }
-}
-
-void stepper(int stepdeg) {
-  if (stepdeg != prevStepdeg) {
-    println("Offsetting Stepper by "+stepdeg);
-    port.write("b");
-    port.write(str(stepdeg));
-    port.write('\n');
-    prevStepdeg = stepdeg;
   }
 }
 
