@@ -15,6 +15,7 @@ Sameer Ansari
 #include <Encoder.h>
 #include <Timer.h>
 #include <PID_v1.h>
+#include <StepperMotor.h>
 
 //////////////////////////////////////////////////////////////////////////////
 /// 
@@ -39,7 +40,7 @@ Sameer Ansari
 
 // system state max 0-STATE_MAX, used for button state incrementing
 #define STATE_MAX 3
-#define BUTTON_PRESS_BOUNCE_DELAY_MS 25
+#define BUTTON_PRESS_BOUNCE_DELAY_MS 250
 #define BUTTON_PIN 2
 
 // LED Light Sensor
@@ -56,6 +57,12 @@ Sameer Ansari
 #define DC_ENABLE_PIN 11
 #define DC_DRIVE2_PIN 10
 #define DC_DRIVE1_PIN 13
+#define MIN_DC_SPD 50 // Use 20V for the DC Motor at these gaine values
+
+// Stepper Motor
+#define STEPPER_DIRECTION_PIN A5
+#define STEPPER_STEP_PIN 9
+#define STEPPER_SPEED 15
 
 //////////////////////////////////////////////////////////////////////////////
 /// 
@@ -79,36 +86,19 @@ float g_EncoderVelocity = 0; // Radians per second
 long g_LastEncoderValue = 0;
 double g_EncoderAngle = 0; // In revolutions (360.0 degrees = 1.0)
 
-void updateEncoderReading() {
-  // Get raw ticks
-  long encoderValue = g_DCMotorEncoder.read();
-
-  // Get position in revolutions (includes multiple revolutions)
-//  Serial.println(encoderValue);
-  g_EncoderAngle = (double)encoderValue / (double)TICKS_PER_REVOLUTION;
-//  Serial.println(g_EncoderAngle);
-  
-  // Get velocity in ticks/sec
-  g_EncoderVelocity = 1000.0*(float)(encoderValue-g_LastEncoderValue)/(float)ENCODER_TIME_DELAY_MS;
-
-  // Convert to radians/sec
-  g_EncoderVelocity /=  (double)TICKS_PER_REVOLUTION;
-  
-  // Set last known encoder ticks
-  g_LastEncoderValue = encoderValue;
-}
-
 // DC Motor
 double g_DCMotorVelocity = 0; // Set velocity in range -1000, 1000
 double g_DCMotorGoalPosition = 0; // in revolutions (1.0 = 360 degrees)
 
-// Use 20V for the DC Motor at these gaine values
-#define MIN_DC_SPD 100
+// Stepper Motor
+StepperMotor g_Stepper(STEPPER_DIRECTION_PIN, STEPPER_STEP_PIN);
+
+// PID
 // (Input, Output, Setpoint, P, I, D, DIRECT)
 PID g_DCMotorPID(&g_EncoderAngle,
                  &g_DCMotorVelocity,
                  &g_DCMotorGoalPosition,
-                 2000.0,
+                 500.0,
                  5.0,
                  50,
                  DIRECT);
@@ -130,9 +120,13 @@ PID g_DCMotorPID(&g_EncoderAngle,
 //           + P PIN
 
 LEDLightSensor g_LEDLightSensor(LED_SENSOR_N_PIN, LED_SENSOR_P_PIN);
+boolean prev_lit = false;
 
 // Servo controller
 Servo g_Servo;
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
 **
@@ -142,7 +136,6 @@ Servo g_Servo;
 ** 0 - Serial Control
 ** 1 - Servo motor & Ultrasonic sensor
 */
-
 int g_motorState = 0;
 
 // software de-bounce last time for the button
@@ -150,6 +143,26 @@ long last_time_high = 0;
 boolean button_debounce_ignore = false;
 int last_state = LOW;
 int current_state = LOW;
+
+void updateEncoderReading() {
+  // Get raw ticks
+  long encoderValue = g_DCMotorEncoder.read();
+
+  // Get position in revolutions (includes multiple revolutions)
+//  Serial.println(encoderValue);
+  g_EncoderAngle = (double)encoderValue / (double)TICKS_PER_REVOLUTION;
+//  Serial.println(g_EncoderAngle);
+  
+  // Get velocity in ticks/sec
+  g_EncoderVelocity = 1000.0*(float)(encoderValue-g_LastEncoderValue)/(float)ENCODER_TIME_DELAY_MS;
+
+  // Convert to radians/sec
+  g_EncoderVelocity /=  (double)TICKS_PER_REVOLUTION;
+  
+  // Set last known encoder ticks
+  g_LastEncoderValue = encoderValue;
+}
+
 
 // De-bounced button press interrupt for state switching.
 void button_pressed() {
@@ -161,7 +174,9 @@ void button_pressed() {
     if (g_motorState > STATE_MAX) {g_motorState = 0;}
     Serial.print(" -> ");
     Serial.println(g_motorState, DEC);
-    last_time_high = millis();
+    Serial.print("!");
+    Serial.println(g_motorState, DEC);
+    last_time_high = millis(); // button_press called on rising edge so is high
   }
 }
 
@@ -265,16 +280,25 @@ void demoUltrasonicAndServo() {
 void demoLightAndStepper() {
   // Get Light brightness level (0-100 bright to dark)
   unsigned int led_val = g_LEDLightSensor.getFilteredReading();
-  Serial.print("Light: ");
-  Serial.println(led_val);
+//  Serial.print("Light: ");
+//  Serial.println(led_val);
   
   // Set Motor position based on brightness level  
-  g_Servo.write(map(led_val,0,100,SERVO_MIN_POS,SERVO_MAX_POS));
+  if (led_val < 20 && prev_lit) {
+    // It's dark, so move once
+    // map(led_val,0,100,-360,360)
+    g_Stepper.stepMotorDeg(90, STEPPER_SPEED); // Speed = RPM
+    prev_lit = false;
+  } else if (led_val >= 20 && !prev_lit) {
+    prev_lit = true;
+    g_Stepper.stepMotorDeg(-45, STEPPER_SPEED); // Speed = RPM
+  }
   
   delay(100);
 }
 
 void demoPotAndDC() {
+  // Pot val = 0 - 1.0 double
   double potVal = readPotentiometer();
   // Set potVal to -1000,1000
   potVal = potVal*2000 - 1000;
@@ -306,8 +330,9 @@ void serialEvent() {
       case 'b':
       // Aaron serial command Stepper motor
       pos = Serial.parseInt();
-      Serial.print("Setting stepper to ??? ");
+      Serial.print("Setting stepper to degree ");
       Serial.println(pos);
+      g_Stepper.stepMotorDeg(pos, STEPPER_SPEED); // Speed = RPM
       break;
       
       case 'c':
@@ -374,6 +399,9 @@ void setup() {
   // Initialize PID for DC Motor
   g_DCMotorPID.SetMode(AUTOMATIC);
   g_DCMotorPID.SetOutputLimits(-1000,1000);
+  
+  // Stepper Motor
+  g_Stepper.init();
   
   Serial.println("Initialized.");
 
