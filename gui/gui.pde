@@ -10,7 +10,10 @@ ControlP5 cp5;
 final int black = color(0,0,0);
 int ultrasonic=0;
 int brightness=0;
+int encoder=0;
+float pot=0;
 int prevPos=0;
+int prevVel=0;
 
 void setup() {
   size(500,350);
@@ -33,32 +36,54 @@ void setup() {
   cp5.addSlider("brightness")
      .setPosition(100,80)
      .setRange(0,100)
-     .setCaptionLabel("Brightness");
+     .setCaptionLabel("Brightness")
      ;
      
   cp5.addSlider("pot")
      .setPosition(100,110)
-     .setRange(0,100)
-     .setCaptionLabel("Potentiometer");
+     .setRange(0,1)
+     .setCaptionLabel("Potentiometer")
+     ;
+  
+  cp5.addSlider("encoder")
+     .setPosition(100,140)
+     .setRange(-100000,100000)
+     .setValue(0)
+     .setCaptionLabel("Encoder")
+     ;
+  cp5.addSlider("encoder_angle")
+     .setPosition(100,150)
+     .setRange(0,360)
+     .setValue(0)
+     .setCaptionLabel("Encoder Angle (degrees)")
+     ;
+  cp5.addSlider("encoder_velocity")
+     .setPosition(100,160)
+     .setRange(-10,10)
+     .setValue(0)
+     .setCaptionLabel("Encoder Velocity (RPS)")
      ;
      
   // Motor sliders
   cp5.addSlider("servo")
      .setPosition(100,200)
      .setRange(0,180)
-     .setNumberOfTickMarks(10)
+     .setNumberOfTickMarks(11)
+     .setValue(90)
      .setCaptionLabel("Servo motor position");
      ;
   cp5.addSlider("stepper")
      .setPosition(100,230)
      .setRange(-10,10)
-     .setNumberOfTickMarks(10)
+     .setNumberOfTickMarks(11)
+     .setValue(0)
      .setCaptionLabel("Stepper motor velocity");
      ;
   cp5.addSlider("dc")
      .setPosition(100,260)
-     .setRange(-50,50)
-     .setNumberOfTickMarks(10)
+     .setRange(-1000,1000)
+     .setNumberOfTickMarks(11)
+     .setValue(0)
      .setCaptionLabel("DC motor velocity");
      ;
   
@@ -78,11 +103,17 @@ void serialEvent(Serial port) {
   String s = port.readStringUntil('\n');
   if (s != null && s.charAt(0) == '|') {
     s = trim(s.substring(1));
-    // |ultrasonic brightness
+    // |ultrasonic brightness encoderTicks encoderAngle encoderVelocity potentiometer
     String[] sensor_readings = splitTokens(s, " ");
-    if (sensor_readings.length == 2) {
+    if (sensor_readings.length == 6) {
       cp5.controller("ultrasonic").setValue(int(sensor_readings[0]));
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
+      cp5.controller("encoder").setValue(Long.parseLong(sensor_readings[2]));
+      cp5.controller("encoder_angle").setValue(float(sensor_readings[3]));
+      cp5.controller("encoder_velocity").setValue(float(sensor_readings[4]));
+      cp5.controller("pot").setValue(float(sensor_readings[5]));
+    } else {
+      println("You done goofed.");
     }
   }
 }
@@ -103,5 +134,15 @@ void servo(int pos) {
     port.write(str(pos));
     port.write('\n');
     prevPos = pos;
+  }
+}
+
+void dc(int vel) {
+  if (vel != prevVel) {
+    println("Setting DC to "+vel);
+    port.write("c");
+    port.write(str(vel));
+    port.write('\n');
+    prevVel = vel;
   }
 }
