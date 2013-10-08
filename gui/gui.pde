@@ -12,8 +12,10 @@ int ultrasonic=0;
 int brightness=0;
 int encoder=0;
 float pot=0;
+int deg;
 int prevPos=0;
 int prevVel=0;
+int prevDeg=0;
 
 void setup() {
   size(500,350);
@@ -71,20 +73,25 @@ void setup() {
      .setNumberOfTickMarks(11)
      .setValue(90)
      .setCaptionLabel("Servo motor position");
-     ;
   cp5.addSlider("stepper")
      .setPosition(100,230)
      .setRange(-10,10)
      .setNumberOfTickMarks(11)
      .setValue(0)
      .setCaptionLabel("Stepper motor velocity");
-     ;
+     
   cp5.addSlider("dc")
      .setPosition(100,260)
      .setRange(-1000,1000)
      .setNumberOfTickMarks(11)
      .setValue(0)
      .setCaptionLabel("DC motor velocity");
+  cp5.addSlider("dc_pos")
+     .setPosition(100,270)
+     .setRange(0,360)
+     .setNumberOfTickMarks(9)
+     .setValue(0)
+     .setCaptionLabel("DC motor position (degrees)")
      ;
   
   // Set up serial port
@@ -144,5 +151,15 @@ void dc(int vel) {
     port.write(str(vel));
     port.write('\n');
     prevVel = vel;
+  }
+}
+
+void dc_pos(int deg) {
+  if (deg != prevDeg) {
+    println("Setting DC to degree "+deg);
+    port.write("d");
+    port.write(str(deg));
+    port.write('\n');
+    prevDeg = deg;
   }
 }

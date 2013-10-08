@@ -202,9 +202,9 @@ void setDCMotor(unsigned int spd, int dir)
 
 // Stops DC motor
 void stopDC() {
-  analogWrite(DC_ENABLE_PIN, 0);
-  digitalWrite(DC_DRIVE1_PIN, LOW);
-  digitalWrite(DC_DRIVE2_PIN, LOW);
+  analogWrite(DC_ENABLE_PIN, LOW);
+  digitalWrite(DC_DRIVE1_PIN, HIGH);
+  digitalWrite(DC_DRIVE2_PIN, HIGH);
 }
 
 // PID move to degree value
