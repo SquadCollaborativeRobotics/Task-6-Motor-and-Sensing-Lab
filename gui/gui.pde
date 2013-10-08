@@ -3,6 +3,7 @@
  */
 import processing.serial.*;
 import controlP5.*;
+import java.awt.Frame;
 
 Serial port;
 
@@ -20,10 +21,21 @@ int prevDeg=0;
 int prevStepdeg=0;
 int currState = 0;
 
+// Second Window Handlers
+PFrame f;
+secondApplet second;
+// Graph Position Marker
+int xPos = 1;
+// Graph value holder
+float brightVal;
+
 void setup() {
   size(500,350);
   noStroke();
   cp5 = new ControlP5(this);
+  
+  // Second Window
+  f = new PFrame();
   
   // change the default font to Verdana
   PFont p = createFont("Verdana",11); 
@@ -125,12 +137,17 @@ void serialEvent(Serial port) {
     // |ultrasonic brightness encoderTicks encoderAngle encoderVelocity potentiometer
     String[] sensor_readings = splitTokens(s, " ");
     if (sensor_readings.length == 6) {
+      // Update all gui values
       cp5.controller("ultrasonic").setValue(int(sensor_readings[0]));
       cp5.controller("brightness").setValue(int(sensor_readings[1]));
       cp5.controller("encoder").setValue(Long.parseLong(sensor_readings[2]));
       cp5.controller("encoder_angle").setValue(float(sensor_readings[3]));
       cp5.controller("encoder_velocity").setValue(float(sensor_readings[4]));
       cp5.controller("pot").setValue(float(sensor_readings[5]));
+      
+      // Map brightness sensor value for grapher
+      brightVal = map(int(sensor_readings[1]), 0, 100, 0, second.height);
+      
     } else {
       println("You done goofed.");
     }
@@ -146,9 +163,11 @@ void serialEvent(Serial port) {
 
 void draw() {
   background(black);
-
   fill(brightness);
   rect(50,70,40,20);
+  
+  // Add to make sure graph gets redrawn
+  second.redraw();
 }
 
 void servo(int pos) {
@@ -191,3 +210,47 @@ void dc_pos(int deg) {
     prevDeg = deg;
   }
 }
+
+// Class for Second Window
+public class PFrame extends Frame {
+  public PFrame() {
+      super("Embedded PApplet");
+      setBounds(100, 100, 400, 350);
+      // Add Applet
+      second = new secondApplet();
+      add(second);
+      // important!! do not remove
+      second.init();
+      show();
+  }
+}
+
+public class secondApplet extends PApplet {
+  // Initialize Properties for graph window
+  public void setup(){
+    size(400, 350);
+    background(black);
+    stroke(255, 0, 0);
+    strokeWeight(2);
+    noLoop();
+  }
+  public void draw(){
+    // Draw new line at xPos with brightVal Height
+    // brightVal is value mapped from 0-100 -> 0-height
+    line(xPos, height, xPos, height-brightVal);
+    //print("x = "+xPos);
+    //println(" y = "+brightVal);
+  
+    // If rollover, reset and start again
+    if(xPos >= width){
+      xPos = 0;
+      second.background(black);
+    }  
+    // else increment x value
+    else{ xPos++; 
+    }
+  }
+}
+    
+  
+  
