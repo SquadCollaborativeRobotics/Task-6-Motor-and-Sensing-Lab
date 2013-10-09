@@ -153,10 +153,10 @@ void serialEvent(Serial port) {
     }
   }
   else if (s!= null && s.charAt(0) == '!') {
-    currState = int(trim(s.substring(1)));
     print("Current State: ");
+    currState = int(trim(s.substring(1)));
     println(currState);
-    cp5.controller("state").setValue(currState);
+    cp5.controller("currState").setValue(currState);
   }
 }
 

@@ -99,8 +99,8 @@ PID g_DCMotorPID(&g_EncoderAngle,
                  &g_DCMotorVelocity,
                  &g_DCMotorGoalPosition,
                  500.0,
-                 5.0,
-                 50,
+                 0.01,
+                 20,
                  DIRECT);
 
 // LED light sensor setup
@@ -204,6 +204,7 @@ void setDCMotor(unsigned int spd, int dir)
   // Direction sets direction.
   spd = map(spd, 0, 1000, 0, 255);
 
+  Serial.println(spd);
   // Write output voltage to Enable Pin on H-Bridge
   analogWrite(DC_ENABLE_PIN, spd);
   if (dir == 1 || dir == -1) {
@@ -238,11 +239,12 @@ void setDCtoDeg(int deg) {
   Serial.println(g_DCMotorGoalPosition);
   
   // While not within 1 degrees of goal
-  while ( abs(g_DCMotorGoalPosition - g_EncoderAngle) > 1.0/360.0) {
-    Serial.print("Current: ");
-    Serial.print(g_EncoderAngle);
-    Serial.print(", Diff to goal: ");
-    Serial.print(g_DCMotorGoalPosition - g_EncoderAngle);
+  int i = 0;
+  while ( abs(g_DCMotorGoalPosition - g_EncoderAngle) > 5.0/360.0 && i < 1000) {
+//    Serial.print("Current: ");
+//    Serial.print(g_EncoderAngle);
+//    Serial.print(", Diff to goal: ");
+//    Serial.print(g_DCMotorGoalPosition - g_EncoderAngle);
     
     // Update encoder input val
     updateEncoderReading();
@@ -256,10 +258,11 @@ void setDCtoDeg(int deg) {
     // Set velocity
     setDCVelocity(g_DCMotorVelocity);
     
-    Serial.print(", Vel set to: ");
-    Serial.println(g_DCMotorVelocity);
+//    Serial.print(", Vel set to: ");
+//    Serial.println(g_DCMotorVelocity);
     
     delay(10);
+    i++;
   }
   stopDC();
 }
@@ -279,7 +282,7 @@ void demoUltrasonicAndServo() {
                     SERVO_MIN_POS,
                     SERVO_MAX_POS));
 
-  delay(50);
+  delay(25);
 }
 
 // Run stepper motor based on LED sensor reading
@@ -315,7 +318,7 @@ void demoPotAndDC() {
 ////////////////////////////////////////////////////////////////////////////////
 // Serial events (only in state 0)
 
--/*
+/*
   
   We assume Serial Commands will be given as [char][number], where char
   corresponds to a state of command, and number is a command for that state
@@ -416,6 +419,9 @@ void setup() {
   g_TimerEncoder.every(ENCODER_TIME_DELAY_MS, updateEncoderReading);
   
   // Initialize PID for DC Motor
+  pinMode(DC_ENABLE_PIN, OUTPUT);
+  pinMode(DC_DRIVE2_PIN, OUTPUT);
+  pinMode(DC_DRIVE1_PIN, OUTPUT);
   g_DCMotorPID.SetMode(AUTOMATIC);
   g_DCMotorPID.SetOutputLimits(-1000,1000);
   
