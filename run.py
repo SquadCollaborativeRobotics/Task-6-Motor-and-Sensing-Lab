@@ -27,6 +27,7 @@ if __name__ == '__main__':
 	hardware = None
 	glaunch = None
 	hw_params = ''
+	delay_flag = 0
 
 	if args.environment != None:
 		env = args.environment
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 		if args.mode != None and args.mode in 'sim':
 			time.sleep(5)
 		else:
-			time.sleep(2)
+			delay_flag = 1
 
 	# Launch Robots
 	names_c = []
@@ -113,6 +114,8 @@ if __name__ == '__main__':
 	  		# Launch Hardware
 	  		hw_params = 'init_pose_x:=' + xi[i] + ' ' + 'init_pose_y:=' + yi[i]
 	  		system('xterm -hold -e roslaunch ' + pkg + ' ' + hw_filename + '.launch' +  ' robot:=' + name + ' ' + hw_params + ' &')
+	  		if delay_flag:
+	  			time.sleep(2)
 		  	# Launch April Tags
 		  	if args.a:
 	  			system('xterm -hold -e roslaunch ' + gp_pkg + ' ' + 'april_tags.launch' + ' robot:=' + name + ' mode:=' + cam_mode + ' kinect:=' + kinect + ' &')
