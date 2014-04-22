@@ -8,6 +8,7 @@ if __name__ == '__main__':
 
 	parser = ArgumentParser( description = """For launching SCR Software.""")
 	parser.add_argument('-m', '--mode', help='Mode to run robot in, default is sim. [options: "real", "sim"]')
+	parser.add_argument('-a', '--april_tags', action='store_false', dest='a', help='Boolean to set april tag processor launch.  Default is true.')
 	parser.add_argument('-H', '--hardware', help='Hardware to run, default is none. [options: "p3", "custom", "none"]')
 	parser.add_argument('-g', '--global_planner', help='global_planner to run, default is none. [options: "none", "naive", "closest_robot", "closest_waypoint"]')
 	parser.add_argument('-Nc', '--Number_collector', help='number of collector robots to launch, default is 0.  This or names must be set.')
@@ -47,9 +48,11 @@ if __name__ == '__main__':
 	  	if args.hardware != None:
 			if args.hardware in 'custom':
 				hw_filename = 'custom'
+				kinect = "0"
 
 			elif args.hardware in 'p3':
 				hw_filename = 'p3'
+				kinect = "1"
 
 			elif args.hardware in 'none':
 				pass
@@ -111,7 +114,8 @@ if __name__ == '__main__':
 	  		hw_params = 'init_pose_x:=' + xi[i] + ' ' + 'init_pose_y:=' + yi[i]
 	  		system('xterm -hold -e roslaunch ' + pkg + ' ' + hw_filename + '.launch' +  ' robot:=' + name + ' ' + hw_params + ' &')
 		  	# Launch April Tags
-	  		system('xterm -hold -e roslaunch ' + gp_pkg + ' ' + 'april_tags.launch' + ' robot:=' + name + ' mode:=' + cam_mode + ' &')
+		  	if args.a:
+	  			system('xterm -hold -e roslaunch ' + gp_pkg + ' ' + 'april_tags.launch' + ' robot:=' + name + ' mode:=' + cam_mode + ' kinect:=' + kinect + ' &')
 	  		i = i + 1
 			time.sleep(0.5)
 
