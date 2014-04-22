@@ -114,7 +114,7 @@ if __name__ == '__main__':
 	names_c = []
 	names_b = []
 	if args.Number_collector != None or args.Number_bin != None:
-		if len(args.Names.split()) != (nb + nc):
+		if args.Names and len(args.Names.split()) != (nb + nc):
 			print("Right number of names not given! You gave " + str(len(args.Names.split())) + " but expecting " + str(nc+nb) + " based on -Nc and -Nb.")
 			exit(0)
 	  	if args.Number_collector != None:
