@@ -30,6 +30,7 @@ if __name__ == '__main__':
 	glaunch = None
 	hw_params = ''
 	delay_flag = 0
+	kinect = '0'
 
 	# Parse Arguments and instantiate to proper default value
 	# Number Collectors and Number Bins
