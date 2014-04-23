@@ -172,8 +172,8 @@ if __name__ == '__main__':
 
 	  	# Launch Robot Controllers
 	  	if args.rc:
-	  		if args.rid != None:
-	  			j = int(args.rid)
+	  		if args.robot_id != None:
+	  			j = int(args.robot_id)
 	  		else:
 	  			j = 1
 			for name in names_c:
