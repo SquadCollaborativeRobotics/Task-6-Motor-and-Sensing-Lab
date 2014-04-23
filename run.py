@@ -126,14 +126,14 @@ if __name__ == '__main__':
 			exit(0)
 	  	if args.Number_collector != None:
 	  		if args.Names == None:
-	  			names_c = ['robot' + str(i) for i in range(1, int(args.Number_collector) + 1)]
+	  			names_c = ['robot' + str(i) for i in range(1, nc + 1)]
 	  		else:
 	  			names_c = arg_names[:nc]
 	  		rids.extend(range(len(names_c)))
 
 	  	if args.Number_bin != None:
 	  		if args.Names == None:
-	  			names_b = ['robot' + str(i) for i in range(1 + int(args.Number_collector), int(args.Number_collector) + int(args.Number_bin) + 1)]
+	  			names_b = ['robot' + str(i) for i in range(1 + nc, nc + nb + 1)]
 	  		else:
 	  			names_b = arg_names[nc:]
 	  		rids.extend(range(len(names_c), len(names_b)))
