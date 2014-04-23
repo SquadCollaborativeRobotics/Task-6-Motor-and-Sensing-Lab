@@ -13,6 +13,7 @@ if __name__ == '__main__':
 	parser.add_argument('-g', '--global_planner', help='global_planner to run, default is none. [options: "none", "naive", "closest_robot", "closest_waypoint"]')
 	parser.add_argument('-Nc', '--Number_collector', help='number of collector robots to launch, default is 0.  This or names must be set.')
 	parser.add_argument('-Nb', '--Number_bin', help='number of bin robots to launch, default is 0.  This or names must be set.')
+	parser.add_argument('-N', '--Names', help='names of the robots to use.  Deault is robot[n] so if one robot -> robot1')
 	parser.add_argument('-e', '--environment', help='Gazebo Folder to get launch under. options are ["cubicle", "springdemo"]')
 	parser.add_argument('-o', '--no_environment', action='store_true', dest='no_environment', help="don't launch environment (map server for real, gazebo env for sim)")
 	parser.add_argument('-rc', '--robot_controller', action='store_true', dest='rc', help="Dictates whether to start robot controllers on the robots")
@@ -29,17 +30,34 @@ if __name__ == '__main__':
 	hw_params = ''
 	delay_flag = 0
 
+	# Parse Arguments and instantiate to proper default value
+	# Number Collectors and Number Bins
+	if args.Number_collector != None:
+		nc = int(args.Number_collector)
+	else:
+		nc = 0
+	if args.Number_bin != None:
+		nb = int(args.Number_bin)
+	else:
+		nb = 0
+
+	# Initial X and Y Coords
+	if args.init_x != None:
+		xi = args.init_x.split()
+	else:
+		xi = []
+	if args.init_y != None:
+		yi = args.init_y.split()
+	else:
+		yi = []
+
+	# Environment
 	if args.environment != None:
 		env = args.environment
 	else:
 		env = "cubicle"
 
-	if args.init_x != None:
-		xi = args.init_x.split()
-	if args.init_y != None:
-		yi = args.init_y.split()
-
-
+	# Pull proper package and hardware launch files
 	if args.mode != None and args.mode in 'real':
 		pkg = 'scr_proto'
 	  	filename = 'demo.launch'
@@ -66,8 +84,8 @@ if __name__ == '__main__':
 	  	base_frame = 'robot_center'
 	  	cam_mode = "0"
 
+	# Global Planner launch string parameters
 	if args.global_planner != None:
-	  	glaunch = args.global_planner
 
 	  	if args.global_planner in 'naive':
 	  		glaunch = args.global_planner
@@ -77,34 +95,44 @@ if __name__ == '__main__':
 
 	  	elif args.global_planner in 'closest_waypoint':
 	  		glaunch = args.global_planner
-
 	  	elif args.global_planner in 'none':
 	  		pass
-
 	  	else:
 	  		print("Unrecognized global planner.  Options are: [naive, robot, waypoint, none]")
 
 	# Launch Environment (Map Server for Real, and Gazebo with Environment for sim)
 	if not args.no_environment:
 		system('xterm -hold -e roslaunch ' + pkg + ' ' + filename + ' &')
-		if args.mode != None and args.mode in 'sim':
-			time.sleep(5)
-		else:
-			delay_flag = 1
-			time.sleep(2)
+		# First Core coming up, give time to start properly
+		time.sleep(5)
+
+	else:
+		# First Core Doesn't come up here, needs to come up later
+		delay_flag = 1
 
 	# Launch Robots
 	names_c = []
 	names_b = []
 	if args.Number_collector != None or args.Number_bin != None:
+		if args.Names and len(args.Names.split()) != (nb + nc):
+			print("Right number of names not given! You gave " + str(len(args.Names.split())) + " but expecting " + str(nc+nb) + " based on -Nc and -Nb.")
+			exit(0)
 	  	if args.Number_collector != None:
-	  		names_c = ['robot' + str(i) for i in range(1, int(args.Number_collector) + 1)]
+	  		if args.Names == None:
+	  			names_c = ['robot' + str(i) for i in range(1, int(args.Number_collector) + 1)]
+	  		else:
+	  			names_c = args.Names.split()[:args.Number_collector]
 	  	if args.Number_bin != None:
-	  		names_b = ['robot' + str(i) for i in range(1 + int(args.Number_collector), int(args.Number_collector) + int(args.Number_bin) + 1)]
+	  		if args.Names == None:
+	  			names_b = ['robot' + str(i) for i in range(1 + int(args.Number_collector), int(args.Number_collector) + int(args.Number_bin) + 1)]
+	  		else:
+	  			names_b = args.Names.split()[args.Number_collector:]
 	  	#if args.Number_bin != None and args.Number_collector != None:
 	  	names = names_c + names_b
 	  	if len(xi) < len(names) or len(yi) < len(names):
 	  		print("Not enough initial positions given, make sure that #x arg = #y arg = #Nc + #Nb")
+	  		print("Initial x's given are " + str(len(xi)) + ", expected " + str(len(names)))
+	  		print("Initial y's given are " + str(len(yi)) + ", expected " + str(len(names)))
 	  		exit(0)
 	  	elif len(xi) > len(names) or len(yi) > len(names):
 	  		print("Too many initial positions given, make sure that #x arg = #y arg = #Nc + #Nb")
