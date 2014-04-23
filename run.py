@@ -17,6 +17,7 @@ if __name__ == '__main__':
 	parser.add_argument('-e', '--environment', help='Gazebo Folder to get launch under. options are ["cubicle", "springdemo"]')
 	parser.add_argument('-o', '--no_environment', action='store_true', dest='no_environment', help="don't launch environment (map server for real, gazebo env for sim)")
 	parser.add_argument('-rc', '--robot_controller', action='store_true', dest='rc', help="Dictates whether to start robot controllers on the robots")
+	parser.add_argument('-rid', '--robot_id', help="specifies an rid index to start from while launching robots")
 	parser.add_argument('-x', '--init_x', help="X positions for AMCL initialization")
 	parser.add_argument('-y', '--init_y', help="Y positions for AMCL initialization")
 
@@ -56,6 +57,11 @@ if __name__ == '__main__':
 		env = args.environment
 	else:
 		env = "cubicle"
+
+	arg_names = []
+	if args.Names != None:
+		arg_names = args.Names.split()
+
 
 	# Pull proper package and hardware launch files
 	if args.mode != None and args.mode in 'real':
@@ -113,20 +119,25 @@ if __name__ == '__main__':
 	# Launch Robots
 	names_c = []
 	names_b = []
+	rids = []
 	if args.Number_collector != None or args.Number_bin != None:
-		if args.Names and len(args.Names.split()) != (nb + nc):
-			print("Right number of names not given! You gave " + str(len(args.Names.split())) + " but expecting " + str(nc+nb) + " based on -Nc and -Nb.")
+		if len(arg_names) != (nb + nc):
+			print("Right number of names not given! You gave " + str(len(arg_names)) + " but expecting " + str(nc+nb) + " based on -Nc and -Nb.")
 			exit(0)
 	  	if args.Number_collector != None:
 	  		if args.Names == None:
 	  			names_c = ['robot' + str(i) for i in range(1, int(args.Number_collector) + 1)]
 	  		else:
-	  			names_c = args.Names.split()[:args.Number_collector]
+	  			names_c = arg_names[:nc]
+	  		rids.extend(range(len(names_c)))
+
 	  	if args.Number_bin != None:
 	  		if args.Names == None:
 	  			names_b = ['robot' + str(i) for i in range(1 + int(args.Number_collector), int(args.Number_collector) + int(args.Number_bin) + 1)]
 	  		else:
-	  			names_b = args.Names.split()[args.Number_collector:]
+	  			names_b = arg_names[nc:]
+	  		rids.extend(range(len(names_c), len(names_b)))
+
 	  	#if args.Number_bin != None and args.Number_collector != None:
 	  	names = names_c + names_b
 	  	if len(xi) < len(names) or len(yi) < len(names):
@@ -161,21 +172,27 @@ if __name__ == '__main__':
 
 	  	# Launch Robot Controllers
 	  	if args.rc:
+	  		if args.rid != None:
+	  			j = int(args.rid)
+	  		else:
+	  			j = 1
 			for name in names_c:
 				su = 0
 				sc = 3
 				type = 'collector'
-				rid = name[-1]
+				rid = str(j)
 		  		system('xterm -hold -e roslaunch ' + gp_pkg + ' ' + rc_filename + ' robot:=' + name + ' base_frame:=' + base_frame + ' robot_id:=' + rid + ' type:=' + type + ' storage_used:=' + str(su) + ' storage_capacity:=' + str(sc) + ' &')
 				time.sleep(0.5)
+				j = j + 1
 
 		  	for name in names_b:
 				su = 0
 				sc = 10
 				type = 'bin'
-				rid = name[-1]
+				rid = str(j)
 		  		system('xterm -hold -e roslaunch ' + gp_pkg + ' ' + rc_filename + ' robot:=' + name + ' base_frame:=' + base_frame + ' robot_id:=' + rid + ' type:=' + type + ' storage_used:=' + str(su) + ' storage_capacity:=' + str(sc) + ' &')
 				time.sleep(0.5)
+				j = j + 1
 
 	  # Launch Global Planner
 	if glaunch != None:
