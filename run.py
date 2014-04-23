@@ -46,7 +46,7 @@ if __name__ == '__main__':
 	if args.init_x != None:
 		xi = args.init_x.split()
 	else:
-		xi = []	
+		xi = []
 	if args.init_y != None:
 		yi = args.init_y.split()
 	else:
