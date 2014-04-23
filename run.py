@@ -91,6 +91,7 @@ if __name__ == '__main__':
 			time.sleep(5)
 		else:
 			delay_flag = 1
+			time.sleep(2)
 
 	# Launch Robots
 	names_c = []
