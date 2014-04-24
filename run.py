@@ -202,4 +202,4 @@ if __name__ == '__main__':
 		if env == "cubicle":
 		  	system('xterm -hold -e roslaunch ' + gp_pkg + ' global_planner_script.launch' + ' planner:=' + glaunch +' waypoint_file:=cubicle.points &')
 		else:
-		  	system('xterm -hold -e roslaunch ' + gp_pkg + ' global_planner_script.launch' + ' planner:=' + glaunch +' &') #'waypoint_file:=falldemo.points &')
+		  	system('xterm -hold -e roslaunch ' + gp_pkg + ' global_planner_script.launch' + ' planner:=' + glaunch +' waypoint_file:=springdemo_search_waypoints.points &')
