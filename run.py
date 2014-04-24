@@ -122,9 +122,7 @@ if __name__ == '__main__':
 	names_b = []
 	rids = []
 	if args.Number_collector != None or args.Number_bin != None:
-		if len(arg_names) != (nb + nc):
-			print("Right number of names not given! You gave " + str(len(arg_names)) + " but expecting " + str(nc+nb) + " based on -Nc and -Nb.")
-			exit(0)
+		
 	  	if args.Number_collector != None:
 	  		if args.Names == None:
 	  			names_c = ['robot' + str(i) for i in range(1, nc + 1)]
@@ -141,6 +139,10 @@ if __name__ == '__main__':
 
 	  	#if args.Number_bin != None and args.Number_collector != None:
 	  	names = names_c + names_b
+	  	if len(names) != (nb + nc):
+			print("Right number of names not given! You gave [or default was]" + str(len(names)) + " but expecting " + str(nc+nb) + " based on -Nc and -Nb.")
+			exit(0)
+
 	  	if len(xi) < len(names) or len(yi) < len(names):
 	  		print("Not enough initial positions given, make sure that #x arg = #y arg = #Nc + #Nb")
 	  		print("Initial x's given are " + str(len(xi)) + ", expected " + str(len(names)))
@@ -200,4 +202,4 @@ if __name__ == '__main__':
 		if env == "cubicle":
 		  	system('xterm -hold -e roslaunch ' + gp_pkg + ' global_planner_script.launch' + ' planner:=' + glaunch +' waypoint_file:=cubicle.points &')
 		else:
-		  	system('xterm -hold -e roslaunch ' + gp_pkg + ' global_planner_script.launch' + ' planner:=' + glaunch +' waypoint_file:=falldemo.points &')
+		  	system('xterm -hold -e roslaunch ' + gp_pkg + ' global_planner_script.launch' + ' planner:=' + glaunch +' &') #'waypoint_file:=falldemo.points &')
