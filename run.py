@@ -18,6 +18,7 @@ if __name__ == '__main__':
 	parser.add_argument('-o', '--no_environment', action='store_true', dest='no_environment', help="don't launch environment (map server for real, gazebo env for sim)")
 	parser.add_argument('-rc', '--robot_controller', action='store_true', dest='rc', help="Dictates whether to start robot controllers on the robots")
 	parser.add_argument('-rid', '--robot_id', help="specifies an rid index to start from while launching robots")
+	parser.add_argument('-u', '--uri', help="specifies who the ROS_MASTER is (assumed to not change if not given)")
 	parser.add_argument('-x', '--init_x', help="X positions for AMCL initialization")
 	parser.add_argument('-y', '--init_y', help="Y positions for AMCL initialization")
 
@@ -32,8 +33,23 @@ if __name__ == '__main__':
 	delay_flag = 0
 	kinect = '0'
 
+	system('sudo service chrony restart &')
+
 	# Parse Arguments and instantiate to proper default value
 	# Number Collectors and Number Bins
+
+	if args.uri:
+		if args.uri in ['sam']:
+			master = 'sam-UX31E'
+		elif args.uri in ['alex']:
+			master = 'TheBroPro'
+		elif args.uri in 'shawn':
+			master = 'shawn-ubuntu'
+		elif args.uri in 'aaron':
+			master = 'LinuxBox'
+
+		system('export ROS_MASTER_URI=http://' + master + ':11311')
+
 	if args.Number_collector != None:
 		nc = int(args.Number_collector)
 	else:
