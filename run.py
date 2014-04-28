@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
-from os import system
+from os import system, environ
 import time
 
 if __name__ == '__main__':
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 		elif args.uri in 'aaron':
 			master = 'LinuxBox'
 
-		system('export ROS_MASTER_URI=http://' + master + ':11311')
+		environ['ROS_MASTER_URI'] = 'ROS_MASTER_URI=http://' + master + ':11311'
 
 	if args.Number_collector != None:
 		nc = int(args.Number_collector)
