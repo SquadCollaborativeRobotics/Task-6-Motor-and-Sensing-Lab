@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
 			elif args.hardware in 'p3':
 				hw_filename = 'p3'
-				kinect = "1"
+				kinect = "0"
 
 			elif args.hardware in 'none':
 				pass
@@ -122,7 +122,7 @@ if __name__ == '__main__':
 	names_b = []
 	rids = []
 	if args.Number_collector != None or args.Number_bin != None:
-		
+
 	  	if args.Number_collector != None:
 	  		if args.Names == None:
 	  			names_c = ['robot' + str(i) for i in range(1, nc + 1)]
