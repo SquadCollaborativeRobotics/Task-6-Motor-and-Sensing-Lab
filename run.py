@@ -48,7 +48,8 @@ if __name__ == '__main__':
 		elif args.uri in 'aaron':
 			master = 'LinuxBox'
 
-		environ['ROS_MASTER_URI'] = 'ROS_MASTER_URI=http://' + master + ':11311'
+		master_uri = 'ROS_MASTER_URI=http://' + master + ':11311'
+		environ['ROS_MASTER_URI'] = master_uri
 
 	if args.Number_collector != None:
 		nc = int(args.Number_collector)
