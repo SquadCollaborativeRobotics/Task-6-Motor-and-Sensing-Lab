@@ -135,11 +135,13 @@ if __name__ == '__main__':
 	if not args.no_environment:
 		system('xterm -hold -e roslaunch ' + pkg + ' ' + filename + ' &')
 		# First Core coming up, give time to start properly
-		time.sleep(5)
+		# time.sleep(5)
 
 	else:
 		# First Core Doesn't come up here, needs to come up later
 		delay_flag = 1
+
+	time.sleep(5)
 
 	# Launch Robots
 	names_c = []
