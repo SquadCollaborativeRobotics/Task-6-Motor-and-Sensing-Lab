@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from os import system, environ
+import subprocess
 import time
 
 if __name__ == '__main__':
@@ -33,7 +34,13 @@ if __name__ == '__main__':
 	delay_flag = 0
 	kinect = '0'
 
-	system('sudo service chrony restart &')
+	system('sudo service chrony restart')
+	proc = subprocess.Popen(['rospack find global_planner'], stdout=subprocess.PIPE, shell=True)
+	(out, err) = proc.communicate()
+	print ("output = "+out)
+	out = out + "/logger.config"
+	environ['ROSCONSOLE_CONFIG_FILE'] = out
+	print("set log config file to: "+out)
 
 	# Parse Arguments and instantiate to proper default value
 	# Number Collectors and Number Bins
