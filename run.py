@@ -34,7 +34,6 @@ if __name__ == '__main__':
 	delay_flag = 0
 	kinect = '0'
 
-	system('sudo service chrony restart')
 	proc = subprocess.Popen(['rospack find global_planner'], stdout=subprocess.PIPE, shell=True)
 	(out, err) = proc.communicate()
 	print ("output = "+out)
